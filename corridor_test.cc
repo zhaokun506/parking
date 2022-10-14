@@ -1,8 +1,10 @@
 #include "common/math/vec2d.h"
+#include "common/pnc_point.h"
 #include "configs/open_space_trajectory_optimizer_config.h"
-#include "eigen3/Eigen/Dense"
+#include "configs/vehicle_config.h"
 #include "open_space_map/open_space_map.h"
-#include "open_space_trajectory_optimizer/open_space_trajectory_optimizer.h"
+#include "planning_data/trajectory/discretized_trajectory.h"
+#include "trajectory_smoother/construct_driving_corridor.h"
 #include <memory>
 #include <vector>
 
@@ -55,44 +57,32 @@ int main() {
   // map->PlotAll();
 
   //设置起点终点位置
-  MapPoint start_pose(0, 0, 0);
-  MapPoint end_pose(40, 98,
-                    1 / 2.0 * 3.1415926); //双精度运算避免写正数，导致取整
+
   auto XYbounds = map->XYbounds();
   auto obstacles_vertices_vec = map->obstacles_vertices_vec();
 
-  //障碍物膨胀应该在外边做
+  PlannerOpenSpaceConfig open_space_config;
+  VehicleParam vehicle_config;
+  std::unique_ptr<ConstructDrivingCorridor> cor =
+      std::make_unique<ConstructDrivingCorridor>(open_space_config,
+                                                 vehicle_config);
 
-  double rotate_angle = 0;
-  common::math::Vec2d translate_origin(0, 0);
-  Eigen::MatrixXi obstacles_edges_num(1, 1);
-  OpenSpaceTrajectoryOptimizerConfig open_space_config;
-  double time_latency;
-  std::unique_ptr<OpenSpaceTrajectoryOptimizer> optimizer =
-      std::make_unique<OpenSpaceTrajectoryOptimizer>(open_space_config);
+  Eigen::MatrixXd xWS = Eigen::MatrixXd::Zero(4, 1);
+  xWS << 33, 42, 1.6, 0;
 
-  optimizer->Plan(start_pose, //起点
-                  end_pose,
-                  XYbounds, // 4,XYbounds in xmin, xmax, ymin, ymax
-                  rotate_angle, translate_origin,
-                  obstacles_edges_num, // H表示中A和b矩阵维数所需的维数
-                  obstacles_vertices_vec, //以逆时钟顺序存储障碍物顶点的向量
-                  &time_latency);
+  Eigen::MatrixXd f_bound = Eigen::MatrixXd::Zero(4, 1);
+  Eigen::MatrixXd b_bound = Eigen::MatrixXd::Zero(4, 1);
+  cor->Construct(
+      obstacles_vertices_vec, //障碍物顶点数组，顶点的表示法为Vec2d向量,
+      xWS,                    //初始路径的
+      1,                      //离散点数
+      &f_bound, // 1.车辆前圆心可行驶边界4*n矩阵,(x_min,x_max,y_min,y_max)'*n
+      &b_bound);
 
-  DiscretizedTrajectory coarse_trajectory;
-  DiscretizedTrajectory optimized_trajectory;
+  map->SetSwellingObstacle(cor->swelling_obstacles_vec());
 
-  optimizer->GetCoarseTrajectory(&coarse_trajectory);
-  optimizer->GetOptimizedTrajectory(&optimized_trajectory);
-
-  map->SetSwellingObstacle(
-      optimizer->GetConstructCorridorPtr()->swelling_obstacles_vec());
-
-  map->SetFrontDrivingBound(optimizer->GetFrontDrivingBound());
-  map->SetBackDrivingBound(optimizer->GetBackDrivingBound());
-  map->SetCoarseTrajectory(coarse_trajectory);
-  map->SetOptimizedTrajectory(optimized_trajectory);
-
+  map->SetFrontDrivingBound(f_bound);
+  map->SetBackDrivingBound(b_bound);
   map->PlotAll();
 
   return 1;

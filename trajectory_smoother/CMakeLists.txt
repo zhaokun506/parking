@@ -28,3 +28,7 @@ target_link_libraries(trajectory_smoother PUBLIC
     libipopt.so
     /usr/local/lib64/libadolc.so.2
 )
+
+
+
+

@@ -34,14 +34,14 @@
 #include "configs/vehicle_config.h"
 
 struct ReedSheppPath {
-  std::vector<double> segs_lengths;
-  std::vector<char> segs_types;
-  double total_length = 0.0;
+  std::vector<double> segs_lengths;//分段长度
+  std::vector<char> segs_types;//分段类型
+  double total_length = 0.0;//总长
   std::vector<double> x;   // x数组
   std::vector<double> y;   // y数组
   std::vector<double> phi; //φ数组
   // true for driving forward and false for driving backward
-  std::vector<bool> gear;
+  std::vector<bool> gear;//方向
 };
 
 struct RSPParam {

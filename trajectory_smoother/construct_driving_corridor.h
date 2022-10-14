@@ -31,15 +31,17 @@ public:
 
   //类的主函数，，返回值应该为status。此处用int代替，1代表0K，0代表错误
   //输入：1.地图中所有障碍物的信息 2.初始轨迹，3.离散点数,
-  //输出,将车辆等效为两个圆盘模型1.车辆前圆心可行驶边界n*4矩阵,n*(x_min,x_max,y_min,y_max)
+  //输出,将车辆等效为两个圆盘模型1.车辆前圆心可行驶边界4*n矩阵,(x_min,x_max,y_min,y_max)*n
   int Construct(
       const std::vector<std::vector<common::math::Vec2d>>
           &obstacles_vertices_vec, //障碍物顶点数组，顶点的表示法为Vec2d向量,
       const Eigen::MatrixXd &xWs, //初始路径的
       const int &n,               //离散点数
-      Eigen::MatrixXd
-          *f_bound, // 1.车辆前圆心可行驶边界n*4矩阵,n*(x_min,x_max,y_min,y_max)
+      Eigen::MatrixXd *
+          f_bound, // 1.车辆前圆心可行驶边界4*n矩阵,(x_min,x_max,y_min,y_max)'*n
       Eigen::MatrixXd *r_bound);
+
+  std::vector<std::vector<common::math::Vec2d>> swelling_obstacles_vec();
 
 private:
   //对障碍物进行膨胀处理
@@ -68,4 +70,7 @@ private:
 private:
   PlannerOpenSpaceConfig open_space_config_;
   VehicleParam vehicle_config_;
+
+  std::vector<std::vector<common::math::Vec2d>> swelling_obstacles_vec_;
+  //用于调试变量读取
 };

@@ -185,8 +185,8 @@ private:
   double wheelbase_ = 0.0;
 
   Eigen::MatrixXd state_result_;
-  Eigen::MatrixXd dual_l_result_;
-  Eigen::MatrixXd dual_n_result_;
+  // Eigen::MatrixXd dual_l_result_;
+  // Eigen::MatrixXd dual_n_result_;
   Eigen::MatrixXd control_result_;
   Eigen::MatrixXd time_result_;
 

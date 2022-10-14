@@ -41,12 +41,12 @@ public:
          const std::vector<double> &XYbounds,
          const PlannerOpenSpaceConfig &open_space_conf);
   virtual ~Node3d() = default;
-  static common::math::Box2d
-  GetBoundingBox(const VehicleParam &vehicle_param_, const double x,
-                 const double y, const double phi);
+  static common::math::Box2d GetBoundingBox(const VehicleParam &vehicle_param_,
+                                            const double x, const double y,
+                                            const double phi);
   double GetCost() const {
-    return traj_cost_ + heuristic_cost_;
-  } //单句函数写在.h文件中
+    return traj_cost_ + heuristic_cost_; //轨迹代价+启发代价
+  }                                      //单句函数写在.h文件中
   double GetTrajCost() const { return traj_cost_; }
   double GetHeuCost() const { return heuristic_cost_; }
   int GetGridX() const { return x_grid_; }

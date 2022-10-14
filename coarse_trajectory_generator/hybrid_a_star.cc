@@ -34,6 +34,7 @@ HybridAStar::HybridAStar(const PlannerOpenSpaceConfig &open_space_conf)
   //参数分配
   next_node_num_ = //扩展节点的数量
       planner_open_space_config_.warm_start_config.next_node_num;
+  //前轮转角8.2/16=0.5rad
   max_steer_angle_ =
       vehicle_param_.max_steer_angle / vehicle_param_.steer_ratio;
   step_size_ =
@@ -59,10 +60,10 @@ bool HybridAStar::AnalyticExpansion(std::shared_ptr<Node3d> current_node) {
   if (!reed_shepp_generator_->ShortestRSP(
           current_node, end_node_,
           reeds_shepp_to_check)) { //搜寻最短的RS路径
-    std::cout << "ShortestRSP failed";
+    std::cout << "ShortestRSP failed" << std::endl;
     return false;
   }
-
+  //检查ReedShep路径是否碰撞或者可行
   if (!RSPCheck(reeds_shepp_to_check)) {
     return false;
   }
@@ -116,10 +117,10 @@ bool HybridAStar::ValidityCheck(std::shared_ptr<Node3d> node) {
       for (const common::math::LineSegment2d &linesegment :
            obstacle_linesegments) {
         if (bounding_box.HasOverlap(linesegment)) { //碰撞
-          std::cout << "collision start at x: " << linesegment.start().x();
-          std::cout << "collision start at y: " << linesegment.start().y();
-          std::cout << "collision end at x: " << linesegment.end().x();
-          std::cout << "collision end at y: " << linesegment.end().y();
+          std::cout << "collision start at x,y: " << linesegment.start().x()
+                    << " , " << linesegment.start().y() << std::endl;
+          std::cout << "collision end at   x,y: " << linesegment.end().x()
+                    << " , " << linesegment.end().y() << std::endl;
           return false;
         }
       }
@@ -287,7 +288,7 @@ bool HybridAStar::GetResult(HybridAStartResult *result) {
   (*result).phi = hybrid_a_phi;
 
   if (!GetTemporalProfile(result)) {
-    std::cout << "GetSpeedProfile from Hybrid Astar path fails";
+    std::cout << "GetSpeedProfile from Hybrid Astar path fails" << std::endl;
     return false;
   }
 
@@ -297,15 +298,15 @@ bool HybridAStar::GetResult(HybridAStartResult *result) {
     std::cout << "state sizes not equal, "
               << "result->x.size(): " << result->x.size() << "result->y.size()"
               << result->y.size() << "result->phi.size()" << result->phi.size()
-              << "result->v.size()" << result->v.size();
+              << "result->v.size()" << result->v.size() << std::endl;
     return false;
   }
   if (result->a.size() != result->steer.size() ||
       result->x.size() - result->a.size() != 1) {
-    std::cout << "control sizes not equal or not right";
-    std::cout << " acceleration size: " << result->a.size();
-    std::cout << " steer size: " << result->steer.size();
-    std::cout << " x size: " << result->x.size();
+    std::cout << "control sizes not equal or not right" << std::endl;
+    std::cout << " acceleration size: " << result->a.size() << std::endl;
+    std::cout << " steer size: " << result->steer.size() << std::endl;
+    std::cout << " x size: " << result->x.size() << std::endl;
     return false;
   }
   return true;
@@ -563,7 +564,8 @@ bool HybridAStar::TrajectoryPartition(
   if (x.size() != y.size() || x.size() != phi.size()) {
     std::cout
         << "states sizes are not equal when do trajectory partitioning of "
-           "Hybrid A Star result";
+           "Hybrid A Star result"
+        << std::endl;
     return false;
   }
 
@@ -605,15 +607,17 @@ bool HybridAStar::TrajectoryPartition(
   // Retrieve v, a and steer from path
 
   for (auto &result : *partitioned_result) {
-    bool FLAGS_use_s_curve_speed_smooth = 1;
+    //是否使用曲线平滑算法
+    bool FLAGS_use_s_curve_speed_smooth = 0;
     if (FLAGS_use_s_curve_speed_smooth) {
-      if (!GenerateSCurveSpeedAcceleration(&result)) {
-        std::cout << "GenerateSCurveSpeedAcceleration fail";
-        return false;
-      }
+      // zhaokun20221013
+      // if (!GenerateSCurveSpeedAcceleration(&result)) {
+      //   std::cout << "GenerateSCurveSpeedAcceleration fail" << std::endl;
+      //   return false;
+      // }
     } else {
       if (!GenerateSpeedAcceleration(&result)) {
-        std::cout << "GenerateSpeedAcceleration fail";
+        std::cout << "GenerateSpeedAcceleration fail" << std::endl;
         return false;
       }
     }
@@ -628,7 +632,7 @@ bool HybridAStar::TrajectoryPartition(
 bool HybridAStar::GetTemporalProfile(HybridAStartResult *result) {
   std::vector<HybridAStartResult> partitioned_results;
   if (!TrajectoryPartition(*result, &partitioned_results)) {
-    std::cout << "TrajectoryPartition fail";
+    std::cout << "TrajectoryPartition fail" << std::endl;
     return false;
   }
   HybridAStartResult stitched_result;
@@ -680,6 +684,11 @@ bool HybridAStar::Plan(double sx, double sy, double sphi, double ex, double ey,
           obstacle_vertices[i], obstacle_vertices[i + 1]);
       obstacle_linesegments.emplace_back(line_segment); //尾插
     }
+    // zhaokun20221012增加最后一条线段A-B-C-D-A
+    common::math::LineSegment2d last_line_segment = common::math::LineSegment2d(
+        obstacle_vertices[vertices_num - 1], obstacle_vertices[0]);
+    obstacle_linesegments.emplace_back(last_line_segment); //尾插
+
     obstacles_linesegments_vec.emplace_back(obstacle_linesegments);
   }
   obstacles_linesegments_vec_ = std::move(obstacles_linesegments_vec);
@@ -688,24 +697,25 @@ bool HybridAStar::Plan(double sx, double sy, double sphi, double ex, double ey,
   // 3.载入起点终点并做碰撞校验
   XYbounds_ = XYbounds;
   // load nodes and obstacles
+  // node3d相对于xybound的起点和-pi的格子数
   start_node_.reset(
       new Node3d({sx}, {sy}, {sphi}, XYbounds_, planner_open_space_config_));
   end_node_.reset(
       new Node3d({ex}, {ey}, {ephi}, XYbounds_, planner_open_space_config_));
   if (!ValidityCheck(start_node_)) {
-    std::cout << "start_node in collision with obstacles";
+    std::cout << "start_node in collision with obstacles" << std::endl;
     return false;
   }
   if (!ValidityCheck(end_node_)) {
-    std::cout << "end_node in collision with obstacles";
+    std::cout << "end_node in collision with obstacles" << std::endl;
     return false;
   }
   // 4.生成动态规划代价地图，以终点为搜索起点，遍历整个地图计算各个点到终点的代价。
   double map_time = clock();
-
+  //
   grid_a_star_heuristic_generator_->GenerateDpMap(ex, ey, XYbounds_,
                                                   obstacles_linesegments_vec_);
-  std::cout << "map time " << clock() - map_time;
+  std::cout << "map time " << clock() - map_time << std::endl;
   // load open set, pq5.载入起点至open_set、open_pq
   open_set_.emplace(start_node_->GetIndex(), start_node_);
   open_pq_.emplace(start_node_->GetIndex(), start_node_->GetCost());
@@ -767,16 +777,18 @@ bool HybridAStar::Plan(double sx, double sy, double sphi, double ex, double ey,
     }
   }
   if (final_node_ == nullptr) {
-    std::cout << "Hybrid A searching return null ptr(open_set ran out)";
+    std::cout << "Hybrid A searching return null ptr(open_set ran out)"
+              << std::endl;
     return false;
   }
   if (!GetResult(result)) {
-    std::cout << "GetResult failed";
+    std::cout << "GetResult failed" << std::endl;
     return false;
   }
-  std::cout << "explored node num is " << explored_node_num;
-  std::cout << "heuristic time is " << heuristic_time;
-  std::cout << "reed shepp time is " << rs_time;
-  std::cout << "hybrid astar total time is " << clock() - astar_start_time;
+  std::cout << "explored node num is " << explored_node_num << std::endl;
+  std::cout << "heuristic time is " << heuristic_time << std::endl;
+  std::cout << "reed shepp time is " << rs_time << std::endl;
+  std::cout << "hybrid astar total time is " << clock() - astar_start_time
+            << std::endl;
   return true;
 }

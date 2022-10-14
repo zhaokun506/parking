@@ -15,7 +15,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fopenmp")#编译器启用openmp
 
 project(parking)
 
-
+SET(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 #设置运行时目标文件（exe dll）的输出位置
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -74,6 +76,34 @@ find_package(Eigen3 REQUIRED)
 target_link_libraries(parking PUBLIC
     open_space_map
     open_space_trajectory_optimizer
+    configs 
+    common_math
+    Eigen3::Eigen
+)
+
+
+#corridor_test
+
+#link_directories的位置得放到add_executable前面
+link_directories(
+    "usr/local/lib"
+    "usr/local/lib64"
+    "usr/lib"
+    ${PROJECT_BINARY_DIR}/lib
+)
+
+add_executable(corridor_test corridor_test.cc)
+
+target_include_directories(corridor_test PUBLIC 
+                            ${PROJECT_SOURCE_DIR}#工程目录
+                            "usr/include"#系统目录
+                            "usr/local/include"#安装文件目录
+                            "/usr/include/python3.6m"#python目录
+)
+
+target_link_libraries(corridor_test PUBLIC
+    open_space_map
+    trajectory_smoother
     configs 
     common_math
     Eigen3::Eigen

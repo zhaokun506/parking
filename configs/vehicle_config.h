@@ -45,15 +45,21 @@ public:
   double max_acceleration = 2;
   double max_deceleration = -6;
 
+  //前轮转角 = 方向盘转角 / 某个比例。
+  //对应max_steer_angle_的赋值代码来看，
+  //vehicle_param_.max_steer_angle() 就是车辆允许的最大方向盘转角，vehicle_param_.steer_ratio()
+  //就是线性关系的比例参数，而max_steer_angle_就是车辆允许的最大前轮转角。综上，steering是车辆的前轮转角大小。
+
   // The following items are used to compute trajectory constraints约束 in
   // planning/control/canbus,
-  // vehicle max steer angle
+  // vehicle max steer angle//最大方向盘转角，单位：弧度
   double max_steer_angle = 8.20304748437;
   // vehicle max steer rate; how fast can the steering wheel turn.
   double max_steer_angle_rate = 8.55211;
   // vehicle min steer rate;
   double min_steer_angle_rate = -8.55211;
   // ratio between the turn of steering wheel and the turn of wheels
+  //方向盘转角与车轮转角之比 前轮转角8.2/16=29.36度
   double steer_ratio = 16;
   // the distance between the front and back wheels
   double wheel_base = 2.8448;

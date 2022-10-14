@@ -54,8 +54,8 @@ bool DistanceApproachProblem::Solve(
   DistanceApproachInterface *ptop = nullptr; //接口类指针
 
   if (planner_open_space_config_.distance_approach_config
-          .distance_approach_mode ==
-      "DISTANCE_APPROACH_CORRIDOR_IPOPT") { //默认模式
+          .distance_approach_mode == "") { //默认模式
+    std::cout << "优化参数未设置" << std::endl;
   } else if (planner_open_space_config_.distance_approach_config
                  .distance_approach_mode ==
              "DISTANCE_APPROACH_CORRIDOR_IPOPT") {
@@ -67,15 +67,17 @@ bool DistanceApproachProblem::Solve(
 
   Ipopt::SmartPtr<Ipopt::TNLP> problem = ptop; //将指针传递给problem IPOPT
 
-  // Create an instance of the IpoptApplication//实例化一个IPOPT对象
+  // Create an instance of the IpoptApplication//实例化一个IPOPT求解器对象
   Ipopt::SmartPtr<Ipopt::IpoptApplication> app = IpoptApplicationFactory();
   //对优化器进行设置
   app->Options()->SetIntegerValue(
       "print_level", planner_open_space_config_.distance_approach_config
                          .ipopt_config.ipopt_print_level);
+  // zhaokun20221013参数未设置
   app->Options()->SetIntegerValue(
       "mumps_mem_percent", planner_open_space_config_.distance_approach_config
                                .ipopt_config.mumps_mem_percent);
+  // zhaokun20221013参数未设置
   app->Options()->SetNumericValue(
       "mumps_pivtol", planner_open_space_config_.distance_approach_config
                           .ipopt_config.mumps_pivtol);
@@ -117,7 +119,7 @@ bool DistanceApproachProblem::Solve(
     return false;
   }
 
-  status = app->OptimizeTNLP(problem); //将问题描述传递给求解器，进行求解
+  status = app->OptimizeTNLP(problem); //将问题描述传递给求解器，进行求解。
 
   if (status == Ipopt::Solve_Succeeded ||
       status == Ipopt::Solved_To_Acceptable_Level) {

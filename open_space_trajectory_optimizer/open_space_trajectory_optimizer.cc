@@ -71,9 +71,9 @@ int OpenSpaceTrajectoryOptimizer::Plan(
   //☆☆☆☆☆☆☆☆☆☆☆1.调用混合A*算法☆☆☆☆☆☆☆☆☆☆☆
   if (warm_start_->Plan(init_x, init_y, init_phi, end_x, end_y, end_phi,
                         XYbounds, obstacles_vertices_vec, &result)) {
-    std::cout << "State warm start problem solved successfully!";
+    std::cout << "State warm start problem solved successfully!" << std::endl;
   } else {
-    std::cout << "State warm start problem failed to solve";
+    std::cout << "State warm start problem failed to solve" << std::endl;
     return 0;
   }
 
@@ -114,15 +114,29 @@ int OpenSpaceTrajectoryOptimizer::Plan(
 
   //生成行车隧道
   int num_point = xWS.cols();
-  Eigen::MatrixXd f_driving_bound; // l
-  Eigen::MatrixXd b_driving_bound; // n
+  // l 矩阵需要初始化
+  /*
+  x0 x1...xn
+  y0 y1...yn
+  */
+  Eigen::MatrixXd f_driving_bound = Eigen::MatrixXd::Zero(4, num_point); // 4*n
+  Eigen::MatrixXd b_driving_bound = Eigen::MatrixXd::Zero(4, num_point); // 4*n
   construct_corridor_->Construct(
       obstacles_vertices_vec, //障碍物顶点数组，顶点的表示法为Vec2d向量,
       xWS,                    //初始路径
       num_point,              //离散点数
       &f_driving_bound, // 1.车辆前圆心可行驶边界n*4矩阵,n*(x_min,x_max,y_min,y_max)
       &b_driving_bound);
-  void GetCoarseTrajectory(DiscretizedTrajectory * optimized_trajectory);
+
+  f_bound_ = f_driving_bound;
+  r_bound_ = b_driving_bound;
+
+  // void GetCoarseTrajectory(DiscretizedTrajectory * optimized_trajectory);
+  // zhaokun
+  time_result_ds = Eigen::MatrixXd::Zero(1, num_point);
+  for (int i = 0; i < num_point; i++) {
+    time_result_ds(0, i) = i * 1; // dt ts应该是固定的
+  }
 
   GenerateCoarseTraj(
       xWS, uWS, XYbounds, obstacles_edges_num, f_driving_bound,
@@ -203,6 +217,7 @@ void OpenSpaceTrajectoryOptimizer::UseWarmStartAsResult(
     Eigen::MatrixXd *time_result_ds) {
   std::cout << "Use warm start as trajectory output" << std::endl;
   *state_result_ds = xWS;
+  *control_result_ds = uWS;
 }
 
 bool OpenSpaceTrajectoryOptimizer::GenerateDistanceApproachTraj(
@@ -256,8 +271,8 @@ void OpenSpaceTrajectoryOptimizer::LoadHybridAstarResultInEigen(
     HybridAStartResult *result, Eigen::MatrixXd *xWS, Eigen::MatrixXd *uWS) {
   // load Warm Start result(horizon is timestep number minus one)
   size_t horizon = result->x.size() - 1;
-  xWS->resize(4, horizon + 1);
-  uWS->resize(2, horizon);
+  xWS->resize(4, horizon + 1); // 4行n列
+  uWS->resize(2, horizon);     // 4行n-1列控制量少一个周期
   Eigen::VectorXd x = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(
       result->x.data(), horizon + 1);
   Eigen::VectorXd y = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(
@@ -381,4 +396,16 @@ void OpenSpaceTrajectoryOptimizer::LoadCoarseTrajectory(
     coarse_trajectory_.emplace_back(point);
     last_path_point = cur_path_point;
   }
+}
+
+Eigen::MatrixXd OpenSpaceTrajectoryOptimizer::GetFrontDrivingBound() {
+  return f_bound_;
+}
+Eigen::MatrixXd OpenSpaceTrajectoryOptimizer::GetBackDrivingBound() {
+  return r_bound_;
+}
+
+std::shared_ptr<ConstructDrivingCorridor>
+OpenSpaceTrajectoryOptimizer::GetConstructCorridorPtr() {
+  return construct_corridor_; //构建行车隧道
 }

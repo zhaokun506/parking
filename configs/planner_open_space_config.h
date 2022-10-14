@@ -11,7 +11,7 @@ struct sCurveConfig {
 };
 // A*算法参数配置
 struct HybridAstar {
-  const double xy_grid_resolution = 0.3;   // xy栅格分辨率 m
+  const double xy_grid_resolution = 0.3;  // xy栅格分辨率 m
   const double phi_grid_resolution = 0.1;  //φ栅格分辨率 rad
   const double next_node_num = 10;         //扩展的节点数量 上5下5
   const double step_size = 0.5;            //步长

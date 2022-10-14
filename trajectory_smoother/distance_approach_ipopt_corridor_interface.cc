@@ -48,16 +48,16 @@ DistanceApproachIPOPTCorridorInterface::DistanceApproachIPOPTCorridorInterface(
   obstacles_edges_sum_ = obstacles_edges_num_.sum();
   //输出矩阵初始化
   state_result_ = Eigen::MatrixXd::Zero(4, horizon_ + 1);
-  dual_l_result_ = Eigen::MatrixXd::Zero(obstacles_edges_sum_, horizon_ + 1);
-  dual_n_result_ = Eigen::MatrixXd::Zero(4 * obstacles_num_, horizon_ + 1);
+  // dual_l_result_ = Eigen::MatrixXd::Zero(obstacles_edges_sum_, horizon_ + 1);
+  // dual_n_result_ = Eigen::MatrixXd::Zero(4 * obstacles_num_, horizon_ + 1);
   control_result_ = Eigen::MatrixXd::Zero(2, horizon_);
   time_result_ = Eigen::MatrixXd::Zero(1, horizon_);
   //计算变量起始索引
   state_start_index_ = 0;                    //状态量索引start=0
   control_start_index_ = 4 * (horizon_ + 1); //控制量索引start=4*n(采样点数)
   time_start_index_ = control_start_index_ + 2 * horizon_;
-  l_start_index_ = time_start_index_ + (horizon_ + 1);
-  n_start_index_ = l_start_index_ + obstacles_edges_sum_ * (horizon_ + 1);
+  // l_start_index_ = time_start_index_ + (horizon_ + 1);
+  // n_start_index_ = l_start_index_ + obstacles_edges_sum_ * (horizon_ + 1);
   //此书使用定义的参数类常量赋值
   weight_state_x_ = distance_approach_config_.weight_x; //是为了将读和写分开
   weight_state_y_ = distance_approach_config_.weight_y;
@@ -90,20 +90,20 @@ DistanceApproachIPOPTCorridorInterface::DistanceApproachIPOPTCorridorInterface(
   enable_constraint_check_ = distance_approach_config_.enable_constraint_check;
   enable_jacobian_ad_ = distance_approach_config_.enable_jacobian_ad;
 }
-
+// IPOPT APP step 1
 bool DistanceApproachIPOPTCorridorInterface::get_nlp_info(
     int &n, int &m, int &nnz_jac_g, int &nnz_h_lag,
     IndexStyleEnum &index_style) {
-  std::cout << "get_nlp_info";
+  std::cout << "get_nlp_info" << std::endl;
   // n1 : states variables, 4 * (N+1)  x,y,θ，v状态变量
   int n1 = 4 * (horizon_ + 1); // n + 1终点
-  std::cout << "n1: " << n1;
+  std::cout << "n1: " << n1 << std::endl;
   // n2 : control inputs variables δ，a控制变量
   int n2 = 2 * horizon_;
-  std::cout << "n2: " << n2;
+  std::cout << "n2: " << n2 << std::endl;
   // n3 : sampling time variables tf时间变量
   int n3 = 1;
-  std::cout << "n3: " << n3;
+  std::cout << "n3: " << n3 << std::endl;
 
   // m1 : dynamics constatins 动力学约束
   int m1 = 4 * horizon_;
@@ -140,7 +140,7 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
                                                              double *x_u, int m,
                                                              double *g_l,
                                                              double *g_u) {
-  std::cout << "get_bounds_info";
+  std::cout << "get_bounds_info" << std::endl;
   // ACHECK(XYbounds_.size() == 4)
   //     << "XYbounds_ size is not 4, but" << XYbounds_.size();
 
@@ -194,7 +194,7 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
 
   variable_index += 4;
   std::cout << "variable_index after adding state variables : "
-            << variable_index;
+            << variable_index << std::endl;
 
   // 2. control variables, 2 * [0, horizon_-1]
   for (int i = 0; i < horizon_; ++i) {
@@ -236,21 +236,21 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   }
 
   std::cout << "constraint_index after adding steering rate constraints: "
-            << constraint_index;
+            << constraint_index << std::endl;
 
   // 4. 行车隧道约束4*n
   for (int i = 0; i < horizon_; ++i) {
-    g_l[constraint_index] = f_driving_bound_(i, 1); // xf_min
-    g_u[constraint_index] = f_driving_bound_(i, 0); // xf_max
+    g_l[constraint_index] = f_driving_bound_(1, i); // xf_min
+    g_u[constraint_index] = f_driving_bound_(0, i); // xf_max
 
-    g_l[constraint_index + 1] = f_driving_bound_(i, 3);
-    g_u[constraint_index + 1] = f_driving_bound_(i, 2);
+    g_l[constraint_index + 1] = f_driving_bound_(3, i);
+    g_u[constraint_index + 1] = f_driving_bound_(2, i);
 
-    g_l[constraint_index + 2] = b_driving_bound_(i, 1);
-    g_u[constraint_index + 2] = b_driving_bound_(i, 0);
+    g_l[constraint_index + 2] = b_driving_bound_(1, i); // xb_min
+    g_u[constraint_index + 2] = b_driving_bound_(0, i); // xb_max
 
-    g_l[constraint_index + 3] = b_driving_bound_(i, 3);
-    g_u[constraint_index + 3] = b_driving_bound_(i, 2);
+    g_l[constraint_index + 3] = b_driving_bound_(3, i);
+    g_u[constraint_index + 3] = b_driving_bound_(2, i);
 
     constraint_index += 4;
   }
@@ -315,11 +315,11 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
 
   return true;
 }
-
+// IPOPT APP step 3
 bool DistanceApproachIPOPTCorridorInterface::get_starting_point(
     int n, bool init_x, double *x, bool init_z, double *z_L, double *z_U, int m,
     bool init_lambda, double *lambda) {
-  std::cout << "get_starting_point";
+  std::cout << "get_starting_point" << std::endl;
   // ACHECK(init_x) << "Warm start init_x setting failed";
 
   // CHECK_EQ(horizon_, uWS_.cols());
@@ -343,7 +343,7 @@ bool DistanceApproachIPOPTCorridorInterface::get_starting_point(
   // 2. time scale variable initialization, horizon_ + 1
   x[time_start_index_] = 0.1; //应该为混合A*的时间间隔
 
-  std::cout << "get_starting_point out";
+  std::cout << "get_starting_point out" << std::endl;
   return true;
 }
 
@@ -399,7 +399,7 @@ bool DistanceApproachIPOPTCorridorInterface::eval_jac_g(int n, const double *x,
 bool DistanceApproachIPOPTCorridorInterface::eval_jac_g_ser(
     int n, const double *x, bool new_x, int m, int nele_jac, int *iRow,
     int *jCol, double *values) {
-  std::cout << "eval_jac_g";
+  std::cout << "eval_jac_g" << std::endl;
   // CHECK_EQ(n, num_of_variables_)
   //     << "No. of variables wrong in eval_jac_g. n : " << n;
   // CHECK_EQ(m, num_of_constraints_)
@@ -1018,7 +1018,7 @@ bool DistanceApproachIPOPTCorridorInterface::eval_jac_g_ser(
 
     std::cout
         << "After fulfilled control rate constraints derivative, nz_index : "
-        << nz_index << " nele_jac : " << nele_jac;
+        << nz_index << " nele_jac : " << nele_jac << std::endl;
 
     // 3. Time constraints [0, horizon_ -1]
     time_index = time_start_index_;
@@ -1035,7 +1035,7 @@ bool DistanceApproachIPOPTCorridorInterface::eval_jac_g_ser(
     }
 
     std::cout << "After fulfilled time constraints derivative, nz_index : "
-              << nz_index << " nele_jac : " << nele_jac;
+              << nz_index << " nele_jac : " << nele_jac << std::endl;
 
     // 4. Three obstacles related equal constraints, one equality constraints,
     // [0, horizon_] * [0, obstacles_num_-1] * 4
@@ -1214,11 +1214,12 @@ bool DistanceApproachIPOPTCorridorInterface::eval_jac_g_ser(
       nz_index++;
     }
 
-    std::cout << "eval_jac_g, fulfilled obstacle constraint values";
+    std::cout << "eval_jac_g, fulfilled obstacle constraint values"
+              << std::endl;
     // CHECK_EQ(nz_index, static_cast<int>(nele_jac));
   }
 
-  std::cout << "eval_jac_g done";
+  std::cout << "eval_jac_g done" << std::endl;
   return true;
 } // NOLINT
 
@@ -1311,7 +1312,7 @@ void DistanceApproachIPOPTCorridorInterface::get_optimization_results(
     Eigen::MatrixXd *state_result, Eigen::MatrixXd *control_result,
     Eigen::MatrixXd *time_result, Eigen::MatrixXd *dual_l_result,
     Eigen::MatrixXd *dual_n_result) const {
-  std::cout << "get_optimization_results";
+  std::cout << "get_optimization_results" << std::endl;
   *state_result = state_result_;
   *control_result = control_result_;
   *time_result = time_result_;
@@ -1333,8 +1334,8 @@ void DistanceApproachIPOPTCorridorInterface::get_optimization_results(
                                 control_diff_max);
   }
 
-  std::cout << "state_diff_max: " << state_diff_max;
-  std::cout << "control_diff_max: " << control_diff_max;
+  std::cout << "state_diff_max: " << state_diff_max << std::endl;
+  std::cout << "control_diff_max: " << control_diff_max << std::endl;
 }
 
 //***************    start ADOL-C part ***********************************
@@ -1501,7 +1502,7 @@ void DistanceApproachIPOPTCorridorInterface::eval_constraints(int n, const T *x,
   std::cout
       << "constraint_index after adding Euler forward dynamics constraints "
          "updated: " //写的是前向欧拉，但实际用的是中点欧拉
-      << constraint_index;
+      << constraint_index << std::endl;
 
   // 2. Control rate limit constraints, 1 * [0, horizons-1], only apply
   // steering rate as of now控制增量约束，仅方向角
@@ -1616,7 +1617,8 @@ bool DistanceApproachIPOPTCorridorInterface::check_g(int n, const double *x,
     x_l_tmp[idx] = x_l_tmp[idx] - delta_v;
     if (x[idx] > x_u_tmp[idx] || x[idx] < x_l_tmp[idx]) {
       std::cout << "x idx unfeasible: " << idx << ", x: " << x[idx]
-                << ", lower: " << x_l_tmp[idx] << ", upper: " << x_u_tmp[idx];
+                << ", lower: " << x_l_tmp[idx] << ", upper: " << x_u_tmp[idx]
+                << std::endl;
     }
   }
 
@@ -1656,28 +1658,30 @@ bool DistanceApproachIPOPTCorridorInterface::check_g(int n, const double *x,
 
   // CHECK_EQ(m11, num_of_constraints_);
 
-  std::cout << "dynamics constatins to: " << m1;
-  std::cout << "control rate constraints (only steering) to: " << m2;
-  std::cout << "sampling time equality constraints to: " << m3;
-  std::cout << "obstacle constraints to: " << m4;
-  std::cout << "start conf constraints to: " << m5;
-  std::cout << "constraints on x,y,v to: " << m6;
-  std::cout << "end constraints to: " << m7;
-  std::cout << "control bnd to: " << m8;
-  std::cout << "time interval constraints to: " << m9;
-  std::cout << "lambda constraints to: " << m10;
-  std::cout << "miu constraints to: " << m11;
-  std::cout << "total constraints: " << num_of_constraints_;
+  std::cout << "dynamics constatins to: " << m1 << std::endl;
+  std::cout << "control rate constraints (only steering) to: " << m2
+            << std::endl;
+  std::cout << "sampling time equality constraints to: " << m3 << std::endl;
+  std::cout << "obstacle constraints to: " << m4 << std::endl;
+  std::cout << "start conf constraints to: " << m5 << std::endl;
+  std::cout << "constraints on x,y,v to: " << m6 << std::endl;
+  std::cout << "end constraints to: " << m7 << std::endl;
+  std::cout << "control bnd to: " << m8 << std::endl;
+  std::cout << "time interval constraints to: " << m9 << std::endl;
+  std::cout << "lambda constraints to: " << m10 << std::endl;
+  std::cout << "miu constraints to: " << m11 << std::endl;
+  std::cout << "total constraints: " << num_of_constraints_ << std::endl;
 
   for (int idx = 0; idx < m; ++idx) {
     if (g[idx] > g_u_tmp[idx] + delta_v || g[idx] < g_l_tmp[idx] - delta_v) {
       std::cout << "constrains idx unfeasible: " << idx << ", g: " << g[idx]
-                << ", lower: " << g_l_tmp[idx] << ", upper: " << g_u_tmp[idx];
+                << ", lower: " << g_l_tmp[idx] << ", upper: " << g_u_tmp[idx]
+                << std::endl;
     }
   }
   return true;
 }
-
+// IPOPT APP step 2
 void DistanceApproachIPOPTCorridorInterface::generate_tapes(int n, int m,
                                                             int *nnz_jac_g,
                                                             int *nnz_h_lag) {

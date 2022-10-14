@@ -215,7 +215,7 @@ bool GridSearch::GenerateDpMap(
       }
     }
   }
-  std::cout << "explored node num is " << explored_node_num;
+  std::cout << "explored node num is " << explored_node_num << std::endl;
   return true;
 }
 

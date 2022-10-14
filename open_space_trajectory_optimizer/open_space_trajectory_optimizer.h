@@ -62,6 +62,9 @@ public:
         double *time_latency);
   void GetOptimizedTrajectory(DiscretizedTrajectory *optimized_trajectory);
   void GetCoarseTrajectory(DiscretizedTrajectory *optimized_trajectory);
+  Eigen::MatrixXd GetFrontDrivingBound();
+  Eigen::MatrixXd GetBackDrivingBound();
+  std::shared_ptr<ConstructDrivingCorridor> GetConstructCorridorPtr();
 
 private:
   void LoadTrajectory(const Eigen::MatrixXd &state_result_ds,
@@ -123,11 +126,15 @@ private:
   VehicleParam vehicle_param_;
   //对于其他类的调用，采用将其他类定义为私有成员变量的方式
   std::unique_ptr<HybridAStar> warm_start_;                      //混合A*，
-  std::unique_ptr<ConstructDrivingCorridor> construct_corridor_; //构建行车隧道
+  std::shared_ptr<ConstructDrivingCorridor> construct_corridor_; //构建行车隧道
   std::unique_ptr<DistanceApproachProblem> distance_approach_; //距离接近问题
 
   //输出的结果，定义为私有变量，使用同名的Get方法读取
   std::vector<common::TrajectoryPoint> stitching_trajectory_;
   DiscretizedTrajectory optimized_trajectory_;
   DiscretizedTrajectory coarse_trajectory_;
+
+  // 1.车辆前圆心可行驶边界n*4矩阵,n*(x_min,x_max,y_min,y_max)
+  Eigen::MatrixXd f_bound_;
+  Eigen::MatrixXd r_bound_;
 };
