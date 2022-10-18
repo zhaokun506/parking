@@ -181,6 +181,7 @@ void OpenSpaceTrajectoryOptimizer::LoadTrajectory(
   double relative_time = 0.0;
   double relative_s = 0.0;
   Vec2d last_path_point(state_result(0, 0), state_result(1, 0));
+  std::cout << time_result(0, 0) << std::endl;
   for (size_t i = 0; i < states_size; ++i) {
     common::TrajectoryPoint point;
     point.set_x(state_result(0, i));
@@ -202,7 +203,7 @@ void OpenSpaceTrajectoryOptimizer::LoadTrajectory(
     if (i == 0) {
       point.set_relative_time(relative_time);
     } else {
-      relative_time += time_result(0, i - 1);
+      relative_time = time_result(0, 0) * i;
       point.set_relative_time(relative_time);
     }
 
@@ -251,7 +252,7 @@ bool OpenSpaceTrajectoryOptimizer::GenerateDistanceApproachTraj(
   size_t obstacles_num = obstacles_vertices_vec.size();
 
   // Get timestep delta t
-  double ts_init = 0.1; // TA*/n  计算初始的ts
+  double ts_init = 1; // TA*/n  计算初始的ts
 
   //☆☆☆☆☆☆☆☆☆☆☆3.调用轨迹优化程序☆☆☆☆☆☆☆☆☆☆☆
   // Distance approach trajectory smoothing
@@ -259,7 +260,7 @@ bool OpenSpaceTrajectoryOptimizer::GenerateDistanceApproachTraj(
           x0, xF, last_time_u, horizon, ts_init, ego, xWS, uWS, XYbounds,
           obstacles_num, obstacles_edges_num, f_driving_bound, b_driving_bound,
           state_result_ds, control_result_ds, time_result_ds)) {
-    std::cout << "Distance approach problem solved successfully!";
+    std::cout << "Distance approach problem solved successfully!" << std::endl;
   } else {
     std::cout << "Distance approach problem solved failed!";
   }
@@ -389,7 +390,8 @@ void OpenSpaceTrajectoryOptimizer::LoadCoarseTrajectory(
     if (i == 0) {
       point.set_relative_time(relative_time);
     } else {
-      relative_time += time_result(0, i - 1);
+      relative_time =
+          config_.planner_open_space_config().warm_start_config.delta_t * i;
       point.set_relative_time(relative_time);
     }
 

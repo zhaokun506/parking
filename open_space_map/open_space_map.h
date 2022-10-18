@@ -43,14 +43,30 @@ public:
 
   const std::vector<std::vector<common::math::Vec2d>>
   obstacles_vertices_vec() const;
+  const std::vector<std::vector<common::math::Vec2d>>
+  swelling_obstacles_vec() const;
+
   const std::vector<double> XYbounds() const;
+
+  void SwellingObstacles(const double &r);
+
+  void SwellingObstacle(
+      const std::vector<common::math::Vec2d> &obstacles_vertices,
+      const double &r,
+      std::vector<common::math::Vec2d> *swelling_obstacles_vertices);
 
 private:
   void PlotObstacles(const std::vector<std::vector<common::math::Vec2d>>
                          &obstacles_vertices_vec_);
+
+  void PlotSwellingObstacles(const std::vector<std::vector<common::math::Vec2d>>
+                                 &swelling_obstacles_vertices_vec_);
+
   void PlotTrajectory(const DiscretizedTrajectory &trajectory);
 
   void PlotDrivingBound(const Eigen::MatrixXd bound_);
+
+  void PlotTrajectoryV(const DiscretizedTrajectory &trajectory);
 
 private:
   /* data */

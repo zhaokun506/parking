@@ -81,7 +81,7 @@ public:
   /** Method to return the objective value */ //代价函数
   bool eval_f(int n, const double *x, bool new_x, double &obj_value) override;
 
-  /** Method to return the gradient of the objective */ //代价函数梯度
+  /** Method to return the gradient of the objective */ //代价函数梯度（目标方程偏导方程)
   bool eval_grad_f(int n, const double *x, bool new_x, double *grad_f) override;
 
   /** Method to return the constraint residuals */ //定义约束函数
@@ -244,7 +244,7 @@ private:
 
   double max_miu_ = 0.0;
 
-  bool enable_jacobian_ad_ = false;
+  bool enable_jacobian_ad_ = true;
 
 private:
   DistanceApproachConfig distance_approach_config_;

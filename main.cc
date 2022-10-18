@@ -40,17 +40,19 @@ int main() {
   obs4.push_back(Vec2d(16, 70));
   map->SetOnebstacle(obs4);
 
-  obs5.push_back(Vec2d(44, 100));
+  obs5.push_back(Vec2d(46, 100));
+  obs5.push_back(Vec2d(46, 96));
   obs5.push_back(Vec2d(44, 96));
-  obs5.push_back(Vec2d(42, 96));
-  obs5.push_back(Vec2d(42, 100));
+  obs5.push_back(Vec2d(44, 100));
   map->SetOnebstacle(obs5);
 
-  obs6.push_back(Vec2d(38, 100));
-  obs6.push_back(Vec2d(38, 96));
-  obs6.push_back(Vec2d(36, 96));
   obs6.push_back(Vec2d(36, 100));
+  obs6.push_back(Vec2d(36, 96));
+  obs6.push_back(Vec2d(34, 96));
+  obs6.push_back(Vec2d(34, 100));
   map->SetOnebstacle(obs6);
+  //膨胀障碍物
+  map->SwellingObstacles(2);
 
   // map->PlotAll();
 
@@ -59,7 +61,8 @@ int main() {
   MapPoint end_pose(40, 98,
                     1 / 2.0 * 3.1415926); //双精度运算避免写正数，导致取整
   auto XYbounds = map->XYbounds();
-  auto obstacles_vertices_vec = map->obstacles_vertices_vec();
+
+  auto swelling_obstacles_vec = map->swelling_obstacles_vec();
 
   //障碍物膨胀应该在外边做
 
@@ -76,7 +79,7 @@ int main() {
                   XYbounds, // 4,XYbounds in xmin, xmax, ymin, ymax
                   rotate_angle, translate_origin,
                   obstacles_edges_num, // H表示中A和b矩阵维数所需的维数
-                  obstacles_vertices_vec, //以逆时钟顺序存储障碍物顶点的向量
+                  swelling_obstacles_vec, //以逆时钟顺序存储障碍物顶点的向量
                   &time_latency);
 
   DiscretizedTrajectory coarse_trajectory;

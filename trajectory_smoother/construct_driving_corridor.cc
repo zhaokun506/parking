@@ -20,12 +20,14 @@ int ConstructDrivingCorridor::Construct(
     Eigen::MatrixXd *r_bound) {
   //膨胀障碍物
   std::vector<std::vector<common::math::Vec2d>> swelling_obstacles_vec;
-  for (const auto &obs : obstacles_vertices_vec) {
-    std::vector<common::math::Vec2d> swelling_obstacles_vertices;
-    SwellingObstacles(obs, 2, &swelling_obstacles_vertices); //膨胀障碍物
-    swelling_obstacles_vec.push_back(swelling_obstacles_vertices);
-  }
-  swelling_obstacles_vec_ = swelling_obstacles_vec;
+  // for (const auto &obs : obstacles_vertices_vec) {
+  //   std::vector<common::math::Vec2d> swelling_obstacles_vertices;
+  //   SwellingObstacles(obs, 2, &swelling_obstacles_vertices); //膨胀障碍物
+  //   swelling_obstacles_vec.push_back(swelling_obstacles_vertices);
+  // }
+
+  swelling_obstacles_vec = obstacles_vertices_vec;
+  swelling_obstacles_vec_ = obstacles_vertices_vec;
   //路径点重采样？？是否需要，暂且不写
 
   //由计算前后等效圆心

@@ -51,7 +51,7 @@ DistanceApproachIPOPTCorridorInterface::DistanceApproachIPOPTCorridorInterface(
   // dual_l_result_ = Eigen::MatrixXd::Zero(obstacles_edges_sum_, horizon_ + 1);
   // dual_n_result_ = Eigen::MatrixXd::Zero(4 * obstacles_num_, horizon_ + 1);
   control_result_ = Eigen::MatrixXd::Zero(2, horizon_);
-  time_result_ = Eigen::MatrixXd::Zero(1, horizon_);
+  time_result_ = Eigen::MatrixXd::Zero(1, 1); // zhaokun？？？
   //计算变量起始索引
   state_start_index_ = 0;                    //状态量索引start=0
   control_start_index_ = 4 * (horizon_ + 1); //控制量索引start=4*n(采样点数)
@@ -97,13 +97,13 @@ bool DistanceApproachIPOPTCorridorInterface::get_nlp_info(
   std::cout << "get_nlp_info" << std::endl;
   // n1 : states variables, 4 * (N+1)  x,y,θ，v状态变量
   int n1 = 4 * (horizon_ + 1); // n + 1终点
-  std::cout << "n1: " << n1 << std::endl;
+  std::cout << "状态变量数量n1: " << n1 << std::endl;
   // n2 : control inputs variables δ，a控制变量
   int n2 = 2 * horizon_;
-  std::cout << "n2: " << n2 << std::endl;
+  std::cout << "控制变量n2: " << n2 << std::endl;
   // n3 : sampling time variables tf时间变量
   int n3 = 1;
-  std::cout << "n3: " << n3 << std::endl;
+  std::cout << "时间变量n3: " << n3 << std::endl;
 
   // m1 : dynamics constatins 动力学约束
   int m1 = 4 * horizon_;
@@ -113,11 +113,12 @@ bool DistanceApproachIPOPTCorridorInterface::get_nlp_info(
   int m3 = 0;
   // m4 : obstacle constraints 行车隧道约束包含于变量约束
   // x_f=f1(x),y_f=f2(x),x_b,y_b
-  int m4 = 4 * horizon_;
+  int m4 = 4 * (horizon_ + 1);
 
   num_of_variables_ = n1 + n2 + n3;
   num_of_constraints_ = m1 + m2 + m4;
-  // m=动力学约束+控制变换率约束+时间约束+障碍物约束+所有变量的范围约束
+
+  // m=动力学约束+控制变换率约束+行车隧道约束
   //  number of variables
   n = num_of_variables_;
   std::cout << "num_of_variables_ " << num_of_variables_ << std::endl;
@@ -145,23 +146,26 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   //     << "XYbounds_ size is not 4, but" << XYbounds_.size();
 
   // Variables: includes state, u, sample time and lagrange
-  // multipliers为什么把x上下界变为约束呢？？
+  // multipliers为什么把x上下界变为约束呢？？x上下届约束
   // 1. state variables, 4 * [0, horizon]
   // start point pose
   int variable_index = 0;
 
   x_l[variable_index] = x0_(0, 0);
   x_u[variable_index] = x0_(0, 0);
+
   x_l[variable_index + 1] = x0_(1, 0);
   x_u[variable_index + 1] = x0_(1, 0);
+
   x_l[variable_index + 2] = x0_(2, 0);
   x_u[variable_index + 2] = x0_(2, 0);
+
   x_l[variable_index + 3] = x0_(3, 0);
   x_u[variable_index + 3] = x0_(3, 0);
 
   variable_index += 4;
 
-  // During horizons, 2 ~ N-1
+  // During horizons, 2 ~ N
   for (int i = 1; i < horizon_; ++i) {
     // x
     x_l[variable_index] = XYbounds_[0];
@@ -193,7 +197,7 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   x_u[variable_index + 3] = xf_(3, 0);
 
   variable_index += 4;
-  std::cout << "variable_index after adding state variables : "
+  std::cout << "x上下界 variable_index after adding state variables : "
             << variable_index << std::endl;
 
   // 2. control variables, 2 * [0, horizon_-1]
@@ -210,10 +214,11 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   }
 
   // dt约束
-  x_l[variable_index] = -2e19;
-  x_u[variable_index] = 2e19;
+  x_l[variable_index] = 0;
+  x_u[variable_index] = 10;
   variable_index += 2;
 
+  // g_l
   // Constraints: includes four state Euler forward constraints, three
   // 1. dynamics constraints 4 * [0, horizons-1]
   int constraint_index = 0;
@@ -238,19 +243,19 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   std::cout << "constraint_index after adding steering rate constraints: "
             << constraint_index << std::endl;
 
-  // 4. 行车隧道约束4*n
-  for (int i = 0; i < horizon_; ++i) {
-    g_l[constraint_index] = f_driving_bound_(1, i); // xf_min
-    g_u[constraint_index] = f_driving_bound_(0, i); // xf_max
+  // 4. 行车隧道约束4*n (x_min,x_max,y_min,y_max)'
+  for (int i = 0; i < horizon_ + 1; ++i) {
+    g_l[constraint_index] = f_driving_bound_(0, i); // xf_min
+    g_u[constraint_index] = f_driving_bound_(1, i); // xf_max
 
-    g_l[constraint_index + 1] = f_driving_bound_(3, i);
-    g_u[constraint_index + 1] = f_driving_bound_(2, i);
+    g_l[constraint_index + 1] = f_driving_bound_(2, i);
+    g_u[constraint_index + 1] = f_driving_bound_(3, i);
 
-    g_l[constraint_index + 2] = b_driving_bound_(1, i); // xb_min
-    g_u[constraint_index + 2] = b_driving_bound_(0, i); // xb_max
+    g_l[constraint_index + 2] = b_driving_bound_(0, i); // xb_min
+    g_u[constraint_index + 2] = b_driving_bound_(1, i); // xb_max
 
-    g_l[constraint_index + 3] = b_driving_bound_(3, i);
-    g_u[constraint_index + 3] = b_driving_bound_(2, i);
+    g_l[constraint_index + 3] = b_driving_bound_(2, i);
+    g_u[constraint_index + 3] = b_driving_bound_(3, i);
 
     constraint_index += 4;
   }
@@ -312,7 +317,7 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   //   }
   //   constraint_index++;
   // }
-
+  std::cout << "get_bounds_info out" << std::endl;
   return true;
 }
 // IPOPT APP step 3
@@ -341,7 +346,7 @@ bool DistanceApproachIPOPTCorridorInterface::get_starting_point(
   }
 
   // 2. time scale variable initialization, horizon_ + 1
-  x[time_start_index_] = 0.1; //应该为混合A*的时间间隔
+  x[time_start_index_] = 0.5; //应该为混合A*的时间间隔
 
   std::cout << "get_starting_point out" << std::endl;
   return true;
@@ -364,7 +369,7 @@ bool DistanceApproachIPOPTCorridorInterface::eval_grad_f(int n, const double *x,
 bool DistanceApproachIPOPTCorridorInterface::eval_g(int n, const double *x,
                                                     bool new_x, int m,
                                                     double *g) {
-  eval_constraints(n, x, m, g);
+  eval_constraints(n, x, m, g); //调用自动微分
   // if (enable_constraint_check_) check_g(n, x, m, g);
   return true;
 }
@@ -1281,11 +1286,14 @@ void DistanceApproachIPOPTCorridorInterface::finalize_solution(
     state_result_(3, i) = x[state_index + 3];
     control_result_(0, i) = x[control_index];
     control_result_(1, i) = x[control_index + 1];
-    time_result_(0, i) = x[time_index] * horizon_; // tf
+    //    time_result_(0, i) = x[time_index] * horizon_; // tf
 
     state_index += 4;
     control_index += 2;
   }
+
+  time_result_(0, 0) = x[time_index]; // dt
+
   state_result_(0, 0) = x0_(0, 0);
   state_result_(1, 0) = x0_(1, 0);
   state_result_(2, 0) = x0_(2, 0);
@@ -1348,6 +1356,7 @@ void DistanceApproachIPOPTCorridorInterface::eval_obj(int n, const T *x,
   // min time (if the time step is not fixed) 最小时间
   // regularization wrt warm start trajectory
   // DCHECK(ts_ != 0) << "ts in distance_approach_ is 0";
+  std::cout << "代价函数eval_obj start " << std::endl;
 
   //为什么索引都是从零开始，而不是（x,u,t）'
   int control_index = control_start_index_; // 0+4n         2n个(δ，a)
@@ -1364,10 +1373,10 @@ void DistanceApproachIPOPTCorridorInterface::eval_obj(int n, const T *x,
     T x2_diff = x[state_index + 1] - xWS_(1, i);
     T x3_diff = x[state_index + 2] - xWS_(2, i);
     T x4_abs = x[state_index + 3];
-    *obj_value += weight_state_x_ * x1_diff * x1_diff +
-                  weight_state_y_ * x2_diff * x2_diff +
-                  weight_state_phi_ * x3_diff * x3_diff +
-                  weight_state_v_ * x4_abs * x4_abs;
+    /*    *obj_value += weight_state_x_ * x1_diff * x1_diff +
+                      weight_state_y_ * x2_diff * x2_diff +
+                      weight_state_phi_ * x3_diff * x3_diff +
+                      weight_state_v_ * x4_abs * x4_abs;*/
     state_index += 4;
   }
 
@@ -1403,11 +1412,15 @@ void DistanceApproachIPOPTCorridorInterface::eval_obj(int n, const T *x,
   T first_order_penalty =
       weight_first_order_time_ * x[time_index] * horizon_; //花费总时间代价
   *obj_value += first_order_penalty;
+
+  std::cout << "代价函数eval_obj out " << std::endl;
 }
 
 template <class T>
 void DistanceApproachIPOPTCorridorInterface::eval_constraints(int n, const T *x,
                                                               int m, T *g) {
+
+  std::cout << "约束函数eval_constraints start " << std::endl;
   // state start index
   int state_index = state_start_index_;
 
@@ -1419,7 +1432,8 @@ void DistanceApproachIPOPTCorridorInterface::eval_constraints(int n, const T *x,
 
   int constraint_index = 0;
 
-  // // 1. state constraints 4 * [0, horizons-1] //动力学方程约束，离散方程
+  // // 1. state constraints 4 * [0, horizons-1]
+  // //动力学方程约束，离散方程horizons个
   for (int i = 0; i < horizon_; ++i) {
     // x1
 
@@ -1521,12 +1535,12 @@ void DistanceApproachIPOPTCorridorInterface::eval_constraints(int n, const T *x,
   }
 
   // 4. Three obstacles related equal constraints, one equality constraints,
-  //替换为可行驶隧道约束 4*horizon_个
+  //替换为可行驶隧道约束 4*horizon_+1个
   state_index = state_start_index_;
   control_index = control_start_index_;
   time_index = time_start_index_;
 
-  for (int i = 0; i < horizon_; i++) {
+  for (int i = 0; i < horizon_ + 1; i++) {
 
     // //根据车辆中心计算前后覆盖圆中心
     // double x_f = x + (3 / 4 * vehicle_config_.length -
@@ -1558,6 +1572,8 @@ void DistanceApproachIPOPTCorridorInterface::eval_constraints(int n, const T *x,
     state_index += 4;
     constraint_index += 4;
   }
+
+  std::cout << "约束函数eval_constraints out " << std::endl;
 
   // // 5. load variable bounds as constraints
   // state_index = state_start_index_;
