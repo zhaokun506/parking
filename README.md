@@ -15,6 +15,8 @@
 
 ![HybirdAstarAndNLP](https://user-images.githubusercontent.com/54465004/196306792-24c2b755-c23c-45a7-90ae-dac78567ebb3.png)
 
+![HybirdAstarAndNLP-侧方停车](https://user-images.githubusercontent.com/54465004/198972564-0e770c82-38e7-4df6-8041-97ff2d2fa62b.png)
+![HybirdAstarAndNLP-倒车入库](https://user-images.githubusercontent.com/54465004/198972574-2d754c6a-8e1a-4065-80cb-222c39f0344f.png)
 
 有待进一步研究：
 1.混合A*的速度加速度信息的计算，目前使用的普通的计算方法，apollo的piecewise_jer_speed的速度优化方法暂未研究测试
