@@ -21,6 +21,8 @@
 202201107
 1.增加了apollo TDR-OBCA算法测试对比。
 2.增加了速度优化方法，使用了分段加加速度的优化方法
+![relax_end_slack2](https://user-images.githubusercontent.com/54465004/200247486-61d8154f-4fe0-46c8-93be-641eec5b73bf.png)
+![relax_end_slack-v2](https://user-images.githubusercontent.com/54465004/200247499-bcb33b69-ca52-48bc-85fb-788945576d1e.png)
 
 有待进一步研究：
 1.详细的参数对比，包括运行效率，速度平滑性，控制平滑性，完成时间等
