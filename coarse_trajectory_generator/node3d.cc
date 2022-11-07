@@ -21,7 +21,6 @@
 #include "coarse_trajectory_generator/node3d.h"
 #include "absl/strings/str_cat.h"
 
-
 using common::math::Box2d;
 
 Node3d::Node3d(double x, double y, double phi) {
@@ -94,9 +93,10 @@ Box2d Node3d::GetBoundingBox(const VehicleParam &vehicle_param_, const double x,
   double ego_length = vehicle_param_.length;
   double ego_width = vehicle_param_.width;
   double shift_distance = ego_length / 2.0 - vehicle_param_.back_edge_to_center;
+  // zhaokun20221101由于膨胀了障碍物
   Box2d ego_box({x + shift_distance * std::cos(phi),
                  y + shift_distance * std::sin(phi)}, //中心点坐标
-                phi, ego_length, ego_width); //方向角，长度，宽度
+                phi, ego_length * 1, ego_width * 1); //方向角，长度，宽度
   return ego_box;
 }
 

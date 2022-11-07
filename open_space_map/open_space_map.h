@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+
 namespace plt = matplotlibcpp;
 // using Eigen::MatrixXd;
 class MapPoint {
@@ -62,11 +63,13 @@ private:
   void PlotSwellingObstacles(const std::vector<std::vector<common::math::Vec2d>>
                                  &swelling_obstacles_vertices_vec_);
 
-  void PlotTrajectory(const DiscretizedTrajectory &trajectory);
+  void PlotTrajectory(const DiscretizedTrajectory &trajectory,
+                      const std::string &color);
 
   void PlotDrivingBound(const Eigen::MatrixXd bound_);
 
-  void PlotTrajectoryV(const DiscretizedTrajectory &trajectory);
+  void PlotTrajectoryV(const DiscretizedTrajectory &trajectory,
+                       const std::string &color);
 
 private:
   /* data */

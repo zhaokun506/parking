@@ -19,15 +19,20 @@ int ConstructDrivingCorridor::Construct(
         *f_bound, // 1.车辆前圆心可行驶边界4*n矩阵,(x_min,x_max,y_min,y_max)'*n
     Eigen::MatrixXd *r_bound) {
   //膨胀障碍物
+  double swelling_r = pow(
+      (vehicle_config_.width / 2.0) * (vehicle_config_.width / 4.0) +
+          (vehicle_config_.length / 4.0) * (vehicle_config_.length / 4.0) - 1.5,
+      0.5);
   std::vector<std::vector<common::math::Vec2d>> swelling_obstacles_vec;
-  // for (const auto &obs : obstacles_vertices_vec) {
-  //   std::vector<common::math::Vec2d> swelling_obstacles_vertices;
-  //   SwellingObstacles(obs, 2, &swelling_obstacles_vertices); //膨胀障碍物
-  //   swelling_obstacles_vec.push_back(swelling_obstacles_vertices);
-  // }
+  for (const auto &obs : obstacles_vertices_vec) {
+    std::vector<common::math::Vec2d> swelling_obstacles_vertices;
+    //膨胀障碍物
+    SwellingObstacles(obs, swelling_r * 0.2, &swelling_obstacles_vertices);
+    swelling_obstacles_vec.push_back(swelling_obstacles_vertices);
+  }
 
-  swelling_obstacles_vec = obstacles_vertices_vec;
-  swelling_obstacles_vec_ = obstacles_vertices_vec;
+  swelling_obstacles_vec = swelling_obstacles_vec;
+  swelling_obstacles_vec_ = swelling_obstacles_vec;
   //路径点重采样？？是否需要，暂且不写
 
   //由计算前后等效圆心
@@ -38,16 +43,16 @@ int ConstructDrivingCorridor::Construct(
     double y = xWs(1, i);
     double theta = xWs(2, i);
     //根据车辆中心计算前后覆盖圆中心
-    double x_f = x + (3 / 4 * vehicle_config_.length -
+    double x_f = x + (3 / 4.0 * vehicle_config_.length -
                       vehicle_config_.back_edge_to_center) *
                          cos(theta);
-    double y_f = y + (3 / 4 * vehicle_config_.length -
+    double y_f = y + (3 / 4.0 * vehicle_config_.length -
                       vehicle_config_.back_edge_to_center) *
                          sin(theta);
-    double x_b = x + (1 / 4 * vehicle_config_.length -
+    double x_b = x + (1 / 4.0 * vehicle_config_.length -
                       vehicle_config_.back_edge_to_center) *
                          cos(theta);
-    double y_b = y + (1 / 4 * vehicle_config_.length -
+    double y_b = y + (1 / 4.0 * vehicle_config_.length -
                       vehicle_config_.back_edge_to_center) *
                          sin(theta);
 
@@ -155,6 +160,14 @@ void ConstructDrivingCorridor::GenerateDrivingBoundBox(
         dirs.erase(dirs.begin() + i); //探索完成则从方向列表删除
       }
     }
+  }
+
+  if (bound[0] == 0 || bound[1] == 0 || bound[2] == 0 || bound[3] == 0) {
+    std::cout << "存在包围框生成失败！！" << std::endl;
+    bound[0] = 0.2;
+    bound[1] = 0.2;
+    bound[2] = 0.2;
+    bound[3] = 0.2;
   }
 
   (*driving_bound_box)(0, 0) = x - bound[2]; //{(x_min,x_max,y_min,y_max)}'

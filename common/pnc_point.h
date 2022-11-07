@@ -60,7 +60,7 @@ private:
 };
 
 /*------------------------------------------------------------------------------------------------------------------*/
-
+//apollo不是继承而是包含该类成员
 class TrajectoryPoint : public PathPoint {
   // path point
   // PathPoint path_point;

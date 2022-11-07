@@ -183,7 +183,7 @@ void OpenSpaceTrajectoryOptimizer::LoadTrajectory(
   Vec2d last_path_point(state_result(0, 0), state_result(1, 0));
   std::cout << time_result(0, 0) << std::endl;
   for (size_t i = 0; i < states_size; ++i) {
-    common::TrajectoryPoint point;
+    common::TrajectoryPoint point;//此处apollo使用的是pathpoint
     point.set_x(state_result(0, i));
     point.set_y(state_result(1, i));
     point.set_theta(state_result(2, i));

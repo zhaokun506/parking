@@ -44,10 +44,12 @@ public:
   double min_turn_radius = 5.05386147161; //最小转弯半径
   double max_acceleration = 2;
   double max_deceleration = -6;
+  double max_parking_speed = 4;
 
   //前轮转角 = 方向盘转角 / 某个比例。
   //对应max_steer_angle_的赋值代码来看，
-  //vehicle_param_.max_steer_angle() 就是车辆允许的最大方向盘转角，vehicle_param_.steer_ratio()
+  // vehicle_param_.max_steer_angle()
+  // 就是车辆允许的最大方向盘转角，vehicle_param_.steer_ratio()
   //就是线性关系的比例参数，而max_steer_angle_就是车辆允许的最大前轮转角。综上，steering是车辆的前轮转角大小。
 
   // The following items are used to compute trajectory constraints约束 in

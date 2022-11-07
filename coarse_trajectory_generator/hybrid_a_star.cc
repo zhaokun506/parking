@@ -82,7 +82,7 @@ bool HybridAStar::RSPCheck(
       XYbounds_, planner_open_space_config_));
   return ValidityCheck(node);
 }
-
+//判断行驶点是车辆行驶位置是否与障碍物发生碰撞，或者超出边界
 bool HybridAStar::ValidityCheck(std::shared_ptr<Node3d> node) {
   // CHECK_NOTNULL(node);
   // CHECK_GT(node->GetStepSize(), 0U);
@@ -110,18 +110,21 @@ bool HybridAStar::ValidityCheck(std::shared_ptr<Node3d> node) {
         traversed_y[i] > XYbounds_[3] || traversed_y[i] < XYbounds_[2]) {
       return false;
     }
+    //以行驶点为中心构建汽车的OBB包围框
     Box2d bounding_box = Node3d::GetBoundingBox(
         vehicle_param_, traversed_x[i], traversed_y[i], traversed_phi[i]);
     //是否可以取就近的障碍物线段做碰撞检测，这样遍历所有障碍物计算量是否太大
     for (const auto &obstacle_linesegments : obstacles_linesegments_vec_) {
       for (const common::math::LineSegment2d &linesegment :
            obstacle_linesegments) {
-        if (bounding_box.HasOverlap(linesegment)) { //碰撞
-          std::cout << "collision start at x,y: " << linesegment.start().x()
-                    << " , " << linesegment.start().y() << std::endl;
-          std::cout << "collision end at   x,y: " << linesegment.end().x()
-                    << " , " << linesegment.end().y() << std::endl;
-          return false;
+        { //碰撞，包围框是否覆盖障碍物的边
+          if (bounding_box.HasOverlap(linesegment)) {
+            std::cout << "collision start at x,y: " << linesegment.start().x()
+                      << " , " << linesegment.start().y() << std::endl;
+            std::cout << "collision end at   x,y: " << linesegment.end().x()
+                      << " , " << linesegment.end().y() << std::endl;
+            return false;
+          }
         }
       }
     }
@@ -788,7 +791,7 @@ bool HybridAStar::Plan(double sx, double sy, double sphi, double ex, double ey,
   std::cout << "explored node num is " << explored_node_num << std::endl;
   std::cout << "heuristic time is " << heuristic_time << std::endl;
   std::cout << "reed shepp time is " << rs_time << std::endl;
-  std::cout << "hybrid astar total time is " << clock() - astar_start_time
-            << std::endl;
+  std::cout << "hybrid astar total time is "
+            << (clock() - astar_start_time) / CLOCKS_PER_SEC << std::endl;
   return true;
 }

@@ -187,12 +187,12 @@ bool DistanceApproachIPOPTCorridorInterface::get_bounds_info(int n, double *x_l,
   }
 
   // end point pose
-  x_l[variable_index] = xf_(0, 0) - 0.05;
-  x_u[variable_index] = xf_(0, 0) + 0.05;
-  x_l[variable_index + 1] = xf_(1, 0) - 0.05;
-  x_u[variable_index + 1] = xf_(1, 0) + 0.05;
-  x_l[variable_index + 2] = xf_(2, 0) - 0.02;
-  x_u[variable_index + 2] = xf_(2, 0) + 0.02;
+  x_l[variable_index] = xf_(0, 0) - 0.1;
+  x_u[variable_index] = xf_(0, 0) + 0.1;
+  x_l[variable_index + 1] = xf_(1, 0) - 0.1;
+  x_u[variable_index + 1] = xf_(1, 0) + 0.1;
+  x_l[variable_index + 2] = xf_(2, 0) - 0.2;
+  x_u[variable_index + 2] = xf_(2, 0) + 0.2;
   x_l[variable_index + 3] = xf_(3, 0);
   x_u[variable_index + 3] = xf_(3, 0);
 
@@ -1367,16 +1367,16 @@ void DistanceApproachIPOPTCorridorInterface::eval_obj(int n, const T *x,
   // purpose, later code refine towards improving efficiency
 
   *obj_value = 0.0;
-  // 1. objective to minimize state diff to warm up //1.状态变量与初始值得误差
+  // 1. objective to minimize state diff to warm up //1.状态变量与初始值的误差
   for (int i = 0; i < horizon_ + 1; ++i) {
     T x1_diff = x[state_index] - xWS_(0, i);
     T x2_diff = x[state_index + 1] - xWS_(1, i);
     T x3_diff = x[state_index + 2] - xWS_(2, i);
     T x4_abs = x[state_index + 3];
-    /*    *obj_value += weight_state_x_ * x1_diff * x1_diff +
-                      weight_state_y_ * x2_diff * x2_diff +
-                      weight_state_phi_ * x3_diff * x3_diff +
-                      weight_state_v_ * x4_abs * x4_abs;*/
+    *obj_value += weight_state_x_ * x1_diff * x1_diff +
+                  weight_state_y_ * x2_diff * x2_diff +
+                  weight_state_phi_ * x3_diff * x3_diff +
+                  weight_state_v_ * x4_abs * x4_abs;
     state_index += 4;
   }
 
@@ -1386,20 +1386,23 @@ void DistanceApproachIPOPTCorridorInterface::eval_obj(int n, const T *x,
                   weight_input_a_ * x[control_index + 1] * x[control_index + 1];
     control_index += 2;
   }
+
   //此次调试仅规划一次，所以不适用拼接轨迹，也不使用上一时刻的变量
   // 3. objective to minimize input change rate for first
   // horizon//初始状态控制变化率。
-  control_index = control_start_index_;
-  T last_time_steer_rate = (x[control_index] - last_time_u_(0, 0)) /
-                           x[time_index]; //假设最优一个优化变量是ts
-  T last_time_a_rate =
-      (x[control_index + 1] - last_time_u_(1, 0)) / x[time_index];
-  *obj_value +=
-      weight_stitching_steer_ * last_time_steer_rate * last_time_steer_rate +
-      weight_stitching_a_ * last_time_a_rate * last_time_a_rate;
+  // control_index = control_start_index_;
+  // T last_time_steer_rate = (x[control_index] - last_time_u_(0, 0)) /
+  //                          x[time_index]; //假设最优一个优化变量是ts
+  // T last_time_a_rate =
+  //     (x[control_index + 1] - last_time_u_(1, 0)) / x[time_index];
+  // *obj_value +=
+  //     weight_stitching_steer_ * last_time_steer_rate * last_time_steer_rate +
+  //     weight_stitching_a_ * last_time_a_rate * last_time_a_rate;
 
   // 4. objective to minimize input change rates, [0- horizon_ -2]
-  // //0-n-2控制变化率
+  // 0-n-2控制变化率
+
+  control_index = control_start_index_;
   for (int i = 0; i < horizon_ - 1; ++i) {
     T steering_rate = (x[control_index + 2] - x[control_index]) / x[time_index];
     T a_rate = (x[control_index + 3] - x[control_index + 1]) / x[time_index];

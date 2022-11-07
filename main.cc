@@ -16,54 +16,105 @@ int main() {
   map->SetXYBounds(0, 100, 0, 100);
   //设置障碍物信息，逆时针顶点
   std::vector<Vec2d> obs1, obs2, obs3, obs4, obs5, obs6;
+  //随机障碍物
+  // obs1.push_back(Vec2d(30, 48));
+  // obs1.push_back(Vec2d(30, 36));
+  // obs1.push_back(Vec2d(2, 36));
+  // obs1.push_back(Vec2d(2, 48));
+  // map->SetOnebstacle(obs1);
 
-  obs1.push_back(Vec2d(30, 48));
-  obs1.push_back(Vec2d(30, 36));
-  obs1.push_back(Vec2d(2, 36));
-  obs1.push_back(Vec2d(2, 48));
-  map->SetOnebstacle(obs1);
+  // obs2.push_back(Vec2d(95, 42));
+  // obs2.push_back(Vec2d(95, 6));
+  // obs2.push_back(Vec2d(32, 6));
+  // obs2.push_back(Vec2d(52, 42));
+  // map->SetOnebstacle(obs2);
 
-  obs2.push_back(Vec2d(95, 42));
-  obs2.push_back(Vec2d(95, 6));
-  obs2.push_back(Vec2d(32, 6));
-  obs2.push_back(Vec2d(52, 42));
-  map->SetOnebstacle(obs2);
+  // obs3.push_back(Vec2d(55, 53));
+  // obs3.push_back(Vec2d(55, 43));
+  // obs3.push_back(Vec2d(45, 43));
+  // obs3.push_back(Vec2d(45, 53));
+  // map->SetOnebstacle(obs3);
 
-  obs3.push_back(Vec2d(55, 53));
-  obs3.push_back(Vec2d(55, 43));
-  obs3.push_back(Vec2d(45, 43));
-  obs3.push_back(Vec2d(45, 53));
-  map->SetOnebstacle(obs3);
+  // obs4.push_back(Vec2d(25, 68));
+  // obs4.push_back(Vec2d(30, 55));
+  // obs4.push_back(Vec2d(16, 70));
+  // map->SetOnebstacle(obs4);
 
-  obs4.push_back(Vec2d(25, 68));
-  obs4.push_back(Vec2d(30, 55));
-  obs4.push_back(Vec2d(16, 70));
-  map->SetOnebstacle(obs4);
+  // obs5.push_back(Vec2d(46, 100));
+  // obs5.push_back(Vec2d(46, 96));
+  // obs5.push_back(Vec2d(44, 96));
+  // obs5.push_back(Vec2d(44, 100));
+  // map->SetOnebstacle(obs5);
 
-  obs5.push_back(Vec2d(46, 100));
-  obs5.push_back(Vec2d(46, 96));
-  obs5.push_back(Vec2d(44, 96));
-  obs5.push_back(Vec2d(44, 100));
-  map->SetOnebstacle(obs5);
+  // obs6.push_back(Vec2d(36, 100));
+  // obs6.push_back(Vec2d(36, 96));
+  // obs6.push_back(Vec2d(34, 96));
+  // obs6.push_back(Vec2d(34, 100));
+  // map->SetOnebstacle(obs6);
 
-  obs6.push_back(Vec2d(36, 100));
-  obs6.push_back(Vec2d(36, 96));
-  obs6.push_back(Vec2d(34, 96));
-  obs6.push_back(Vec2d(34, 100));
-  map->SetOnebstacle(obs6);
+  /*
+    //侧方停车场景
+    //车1
+    obs1.push_back(Vec2d(27 + 2, 58.75 + 1));
+    obs1.push_back(Vec2d(27 + 2, 58.75 - 1));
+    obs1.push_back(Vec2d(27 - 32, 58.75 - 1));
+    obs1.push_back(Vec2d(27 - 32, 58.75 + 1));
+    map->SetOnebstacle(obs1);
+    //车2
+    obs2.push_back(Vec2d(40+ 2, 58.75 + 1));
+    obs2.push_back(Vec2d(40 + 2, 58.75 - 1));
+    obs2.push_back(Vec2d(40 - 2, 58.75 - 1));
+    obs2.push_back(Vec2d(40 - 2, 58.75 + 1));
+    map->SetOnebstacle(obs2);
+    //房子
+    obs3.push_back(Vec2d(60, 40));
+    obs3.push_back(Vec2d(60, 0));
+    obs3.push_back(Vec2d(5, 0));
+    obs3.push_back(Vec2d(5, 40));
+    map->SetOnebstacle(obs3);
+  */
+
+  //倒车入库场景
+  // obs1.push_back(Vec2d(26 + 1.25, 57 + 3));
+  // obs1.push_back(Vec2d(26 + 1.25, 57 - 3));
+  // obs1.push_back(Vec2d(26 - 1.25, 57 - 3));
+  // obs1.push_back(Vec2d(26 - 1.25, 57 + 3));
+  // map->SetOnebstacle(obs1);
+  // //车2
+  // obs2.push_back(Vec2d(31 + 1.25, 57 + 3));
+  // obs2.push_back(Vec2d(31 + 1.25, 57 - 3));
+  // obs2.push_back(Vec2d(31 - 1.25, 57 - 3));
+  // obs2.push_back(Vec2d(31 - 1.25, 57 + 3));
+  // map->SetOnebstacle(obs2);
+  //  //房子
+  //  obs3.push_back(Vec2d(60, 40));
+  //  obs3.push_back(Vec2d(60, 0));
+  //  obs3.push_back(Vec2d(5, 0));
+  //  obs3.push_back(Vec2d(5, 40));
+  //  map->SetOnebstacle(obs3);
+
   //膨胀障碍物
-  map->SwellingObstacles(2);
+  double swelling_r =
+      pow((2.11 / 2.0) * (2.11 / 2.0) + (4.99 / 4.0) * (4.99 / 4.0), 0.5);
+  map->SwellingObstacles(swelling_r * 0.6);
 
   // map->PlotAll();
 
   //设置起点终点位置
-  MapPoint start_pose(0, 0, 0);
-  MapPoint end_pose(40, 98,
-                    1 / 2.0 * 3.1415926); //双精度运算避免写正数，导致取整
+  MapPoint start_pose(2, 2, 0);
+
+  //侧方停车
+  // MapPoint end_pose(40, 90,
+  //                   1 / 2.0 * M_PI); //双精度运算避免写正数，导致取整
+  // MapPoint end_pose(32 + 1.043 - 4.933 / 2, 58.75,
+  //                   0); //双精度运算避免写正数，导致取整
+  MapPoint end_pose(28.5, 57 + 1.043 - 4.933 / 2,
+                    -1 / 2.0 * M_PI); //双精度运算避免写正数，导致取整
+
   auto XYbounds = map->XYbounds();
 
   auto swelling_obstacles_vec = map->swelling_obstacles_vec();
-
+  auto obstacles_vertices_vec = map->obstacles_vertices_vec();
   //障碍物膨胀应该在外边做
 
   double rotate_angle = 0;

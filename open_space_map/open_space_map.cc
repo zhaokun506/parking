@@ -6,18 +6,18 @@ OpenSpaceMap::~OpenSpaceMap() {}
 void OpenSpaceMap::PlotAll() {
   PlotObstacles(obstacles_vertices_vec_);
 
-  PlotSwellingObstacles(swelling_obstacles_vec_);
+  // PlotSwellingObstacles(swelling_obstacles_vec_);
 
-  PlotTrajectory(coarse_trajectory_);
+  PlotTrajectory(coarse_trajectory_, "k");
 
   PlotDrivingBound(f_bound_);
   // PlotDrivingBound(b_bound_);
 
-  PlotTrajectory(optimized_trajectory_);
+  PlotTrajectory(optimized_trajectory_, "b");
 
   plt::figure(2);
-  PlotTrajectoryV(coarse_trajectory_);
-  PlotTrajectoryV(optimized_trajectory_);
+  PlotTrajectoryV(coarse_trajectory_, "k");
+  PlotTrajectoryV(optimized_trajectory_, "b");
 
   plt::show(); // plot::show()是一个阻塞函数
 }
@@ -81,15 +81,16 @@ void OpenSpaceMap::PlotSwellingObstacles(
   }
 }
 
-void OpenSpaceMap::PlotTrajectory(const DiscretizedTrajectory &trajectory) {
+void OpenSpaceMap::PlotTrajectory(const DiscretizedTrajectory &trajectory,
+                                  const std::string &color) {
 
   std::vector<double> x, y;
   for (const auto point : trajectory) {
-    x.push_back(point.x());
-    y.push_back(point.y());
+    x.push_back(point.path_point().x());
+    y.push_back(point.path_point().y());
   }
 
-  plt::plot(x, y);
+  plt::plot(x, y, color);
 }
 
 void OpenSpaceMap::PlotDrivingBound(const Eigen::MatrixXd bound_) {
@@ -187,12 +188,13 @@ OpenSpaceMap::swelling_obstacles_vec() const {
   return swelling_obstacles_vec_;
 }
 
-void OpenSpaceMap::PlotTrajectoryV(const DiscretizedTrajectory &trajectory) {
+void OpenSpaceMap::PlotTrajectoryV(const DiscretizedTrajectory &trajectory,
+                                   const std::string &color) {
 
   std::vector<double> x, y;
   for (const auto point : trajectory) {
     x.push_back(point.relative_time());
     y.push_back(point.v());
   }
-  plt::plot(x, y);
+  plt::plot(x, y, color);
 }

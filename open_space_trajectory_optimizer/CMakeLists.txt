@@ -1,4 +1,5 @@
-add_library(open_space_trajectory_optimizer STATIC open_space_trajectory_optimizer.cc)
+
+add_library(open_space_trajectory_optimizer STATIC open_space_trajectory_optimizer.cc apollo_trajectory_optimizer.cc)
 
 target_include_directories(open_space_trajectory_optimizer PUBLIC
                         ${PROJECT_SOURCE_DIR}#工程目录
@@ -12,4 +13,5 @@ target_link_libraries(open_space_trajectory_optimizer PUBLIC
                     configs 
                     coarse_trajectory_generator
                     trajectory_smoother
+                    ${GLOG_LIBRARIES}
 )

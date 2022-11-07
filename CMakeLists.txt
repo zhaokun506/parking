@@ -40,7 +40,7 @@ include_directories(${PROJECT_SOURCE_DIR}#工程目录
 )
 
 # Create the executable
-add_executable(parking main.cc)
+add_executable(parking apollo_parking.cc)
 
 link_directories(
     "usr/local/lib"
@@ -73,13 +73,19 @@ target_include_directories(parking PUBLIC
 find_package(Eigen3 REQUIRED)
 # message(${EIGEN3_INCLUDE_DIRS})
 
+file(GLOB GLOG_LIBRARIES /usr/lib/x86_64-linux-gnu/libglog.so)
+
+
 target_link_libraries(parking PUBLIC
     open_space_map
     open_space_trajectory_optimizer
     configs 
     common_math
     Eigen3::Eigen
+    ${GLOG_LIBRARIES}
 )
+
+
 
 
 #corridor_test
